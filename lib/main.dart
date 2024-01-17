@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
         )
       ],
       child: MaterialApp(
+        title: 'Cible Controleur',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
