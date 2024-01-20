@@ -1,99 +1,85 @@
 import 'dart:convert';
 
 import 'package:cible_controller/helpers/colorsHelpers.dart';
-import 'package:cible_controller/helpers/sharedPreferences.dart';
-import 'package:cible_controller/views/settings/settings.screen.dart';
+import 'package:cible_controller/models/Event.dart';
+import 'package:cible_controller/views/scan/scan.screen.dart';
 import 'package:cible_controller/views/tabs/en_cours/en_cours.screen.dart';
-import 'package:cible_controller/views/tabs/historique/historique.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tab_indicator_styler/tab_indicator_styler.dart';
 import 'package:http/http.dart' as http;
 
-import '../../constants/api.dart';
-import '../../constants/local_path.dart';
-import '../../helpers/countriesJsonHelper.dart';
-import '../../models/categorie.dart';
+import 'package:cible_controller/constants/api.dart';
+import 'package:cible_controller/constants/local_path.dart';
 
 class EventsScreen extends StatefulWidget {
-  const EventsScreen({super.key});
+  const EventsScreen({Key? key});
 
   @override
   State<EventsScreen> createState() => _EventsScreenState();
 }
 
 class _EventsScreenState extends State<EventsScreen> {
-  List<Categorie>? categories;
+  List<Event>? events;
+  bool isLoading = true;
+  bool? countryIsSupport;
 
-  String countryCode = '';
-  String countryLibelle = '';
-  var countryIsSupport;
+  Future<List<Event>?> getEventsFromAPI() async {
+    try {
+      var response = await http.get(
+        Uri.parse('$baseApiUrl/events/scan/today-events'),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+      );
 
-  getCategoriesFromAPI() async {
-    var response = await http.get(
-      Uri.parse('$baseApiUrl/events_of_day/$countryLibelle'),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-    );
-    print('lallllllllllllllll' + jsonDecode(response.body).toString());
+      if (response.statusCode == 200) {
+        final dynamic decodedBody = jsonDecode(response.body);
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      setState(() {
-        countryIsSupport = true;
-        if (jsonDecode(response.body)['data'] != null) {
-          categories =
-              getCategorieFromMap(jsonDecode(response.body)['data'] as List);
+        if (decodedBody['success'] == true) {
+          final List<dynamic> eventDataList = decodedBody['data'];
+
+          List<Event> eventsList = eventDataList
+              .map((dynamic eventJson) => Event.fromJson(eventJson))
+              .toList();
+
+          return eventsList;
         } else {
-          categories = [];
+          print('API success is not true: $decodedBody');
+          return null;
         }
-      });
-      return categories;
-    } else if (response.statusCode == 500) {
-      setState(() {
-        countryIsSupport = false;
-      });
-    }
-  }
-
-  Future getUserLocation() async {
-    var response = await http.get(
-      Uri.parse('https://ipinfo.io/json'),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-    );
-    if (response.statusCode == 200) {
-      // print(object)
-      setState(() {
-        countryCode = jsonDecode(response.body)['country'];
-        countryLibelle = getCountryDialCodeWithCountryCode(countryCode);
-      });
-    }
-  }
-
-  getCategorieFromMap(List categorieListFromAPI) {
-    final List<Categorie> tagObjs = [];
-    for (var element in categorieListFromAPI) {
-      var categorie = Categorie.fromMap(element);
-      if (categorie.events.isNotEmpty) {
-        tagObjs.add(categorie);
+      } else {
+        print('API error: ${response.statusCode}');
+        return null;
       }
+    } catch (e) {
+      print('Error: $e');
+      return null;
     }
-    return tagObjs;
   }
 
   @override
   void initState() {
-    getUserLocation().then((value) => {getCategoriesFromAPI()});
     super.initState();
+    fetchEvents();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  Future<void> fetchEvents() async {
+    try {
+      List<Event>? fetchedEvents = await getEventsFromAPI();
+
+      setState(() {
+        events = fetchedEvents;
+        isLoading = false; // Set loading state to false when data is available
+      });
+    } catch (e) {
+      // Handle error if needed
+      print('Error fetching events: $e');
+      setState(() {
+        isLoading = false; // Set loading state to false on error
+      });
+    }
   }
 
   @override
@@ -119,13 +105,7 @@ class _EventsScreenState extends State<EventsScreen> {
           centerTitle: true,
           actions: [
             IconButton(
-              onPressed: () {
-                // Navigator.of(context).push(
-                //   MaterialPageRoute(builder: (BuildContext context) {
-                //     return const SettingsScreen();
-                //   }),
-                // );
-              },
+              onPressed: () {},
               icon: const Icon(
                 Icons.security,
                 color: AppColor.primary,
@@ -134,82 +114,83 @@ class _EventsScreenState extends State<EventsScreen> {
             )
           ],
         ),
-        body: countryIsSupport != null && !countryIsSupport
+        body: countryIsSupport != null && !countryIsSupport!
             ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Center(
-                  child: Text(
-                    "Désolé, CIBLE n'est pas disponible dans votre pays pour le moment."
-                    "Nous travaillons à son lancement très bientôt."
-                    "Merci et à très bientôt."
-                    "❤️",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                        textStyle: Theme.of(context).textTheme.bodyLarge,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Center(
+            child: Text(
+              "Désolé, CIBLE n'est pas disponible dans votre pays pour le moment."
+                  "Nous travaillons à son lancement très bientôt."
+                  "Merci et à très bientôt."
+                  "❤️",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                textStyle: Theme.of(context).textTheme.bodyLarge,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
+              ),
+            ),
+          ),
+        )
+            : isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : events == null || events!.isEmpty
+            ? Center(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 350,
+                  width: 350,
+                  child: Image.asset('$imagesPath/empty.png'),
+                ),
+                const Text(
+                  'Pas d\'évènements aujourd\'hui',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: AppColor.primary,
                   ),
                 ),
+              ],
+            ),
+          ),
+        )
+            : Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            children: [
+              TabBar(
+                padding:
+                const EdgeInsets.only(bottom: 20, top: 20),
+                labelColor: AppColor.primary,
+                unselectedLabelColor: AppColor.secondary,
+                labelStyle: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+                indicator: DotIndicator(
+                  color: AppColor.primary,
+                  distanceFromCenter: 16,
+                  radius: 5,
+                  paintingStyle: PaintingStyle.fill,
+                ),
+                tabs: const [
+                  Tab(text: 'En cours'),
+                  //Tab(text: 'Historique'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(children: [
+                  EnCoursScreen(events: events!),
+                  // HistoriqueScreen(),
+                ]),
               )
-            : categories == null
-                ? const Center(child: CircularProgressIndicator())
-                : categories!.isEmpty
-                    ? Center(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                height: 350,
-                                width: 350,
-                                child: Image.asset('$imagesPath/empty.png'),
-                              ),
-                              const Text(
-                                'Pas d\'évènements aujourd\'hui',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  color: AppColor.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Column(
-                          children: [
-                            TabBar(
-                              padding:
-                                  const EdgeInsets.only(bottom: 20, top: 20),
-                              labelColor: AppColor.primary,
-                              unselectedLabelColor: AppColor.secondary,
-                              labelStyle: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              indicator: DotIndicator(
-                                color: AppColor.primary,
-                                distanceFromCenter: 16,
-                                radius: 5,
-                                paintingStyle: PaintingStyle.fill,
-                              ),
-                              tabs: const [
-                                Tab(text: 'En cours'),
-                                //Tab(text: 'Historique'),
-                              ],
-                            ),
-                            Expanded(
-                              child: TabBarView(children: [
-                                EnCoursScreen(categories: categories!),
-                                // HistoriqueScreen(),
-                              ]),
-                            )
-                          ],
-                        ),
-                      ),
+            ],
+          ),
+        ),
       ),
     );
   }

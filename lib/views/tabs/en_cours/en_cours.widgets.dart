@@ -1,10 +1,12 @@
 import 'dart:ui';
 
 import 'package:cible_controller/helpers/colorsHelpers.dart';
+import 'package:cible_controller/models/Event.dart';
 import 'package:cible_controller/views/scan/scan.screen.dart';
 import 'package:cible_controller/widgets/toastError.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 
 import '../../../constants/local_path.dart';
 import '../../../widgets/raisedButtonDecor.dart';
@@ -14,8 +16,8 @@ class MyCards extends StatelessWidget {
   final Widget image;
   final String name;
   final String lieu;
-  final String date;
-  final int eventId;
+  final EventDate date;
+  final String eventId;
   final _codeController = TextEditingController();
   final _keyForm = GlobalKey<FormState>();
   FToast fToast = FToast();
@@ -39,6 +41,7 @@ class MyCards extends StatelessWidget {
       child: InkWell(
         onTap: () {
           debugPrint('Card tapped.');
+          print(date);
         },
         child: SizedBox(
           width: double.maxFinite,
@@ -69,9 +72,11 @@ class MyCards extends StatelessWidget {
                               name,
                               style: const TextStyle(
                                 color: AppColor.text,
-                                fontSize: 15,
+                                fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -100,7 +105,7 @@ class MyCards extends StatelessWidget {
                             Expanded(
                               child: SizedBox(
                                 child: Text(
-                                  date,
+                                  DateFormat('d-MM-y').format(DateTime.parse(date.date)),
                                   style: const TextStyle(
                                     color: AppColor.text,
                                     fontSize: 13,
@@ -119,44 +124,33 @@ class MyCards extends StatelessWidget {
                                     builder: (BuildContext context) {
                                       return AlertDialog(
                                         content: Container(
-                                          height: 300,
-                                          width: 300,
+                                          constraints: BoxConstraints.expand(height: 400),
                                           decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(15),
+                                            borderRadius: BorderRadius.circular(15),
                                             color: Colors.white,
                                           ),
-                                          child: SingleChildScrollView(
-                                            physics:
-                                                const BouncingScrollPhysics(),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
                                             child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                               children: [
-                                                const SizedBox(
-                                                  height: 10.0,
-                                                ),
+                                                const SizedBox(height: 10.0),
                                                 const CircleAvatar(
                                                   maxRadius: 30.0,
-                                                  backgroundImage: AssetImage(
-                                                      '$imagesPath/s.jpeg'),
+                                                  backgroundImage: AssetImage('$imagesPath/s.jpeg'),
                                                 ),
                                                 Container(
-                                                  margin: const EdgeInsets.only(
-                                                      top: 5.0),
+                                                  margin: const EdgeInsets.only(top: 5.0),
                                                   child: const Text(
                                                     'CIBLE SCANNER',
                                                     style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontWeight: FontWeight.bold,
                                                       fontSize: 20,
                                                       color: AppColor.text,
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
+                                                const SizedBox(height: 10),
                                                 const Text(
                                                   'Scanner les tickets des participants',
                                                   style: TextStyle(
@@ -166,215 +160,154 @@ class MyCards extends StatelessWidget {
                                                   ),
                                                   textAlign: TextAlign.center,
                                                 ),
-                                                const SizedBox(
-                                                  height: 20,
-                                                ),
+                                                const SizedBox(height: 30),
                                                 Form(
                                                   key: _keyForm,
-                                                  child: SizedBox(
+                                                  child: Expanded(
                                                     child: TextFormField(
-                                                      controller:
-                                                          _codeController,
-                                                      validator: (val) => val
-                                                                      .toString()
-                                                                      .length <
-                                                                  5 &&
-                                                              val
-                                                                  .toString()
-                                                                  .isNotEmpty
+                                                      controller: _codeController,
+                                                      validator: (val) =>
+                                                      val.toString().length < 5 && val.toString().isNotEmpty
                                                           ? 'Veuillez entrer un code valide !'
                                                           : null,
                                                       obscureText: true,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        contentPadding:
-                                                            EdgeInsets.only(
-                                                                left: 20),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                            color: AppColor
-                                                                .secondary,
+                                                      decoration: const InputDecoration(
+                                                        contentPadding: EdgeInsets.only(left: 20),
+                                                        focusedBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                            color: AppColor.secondary,
                                                             width: 3.0,
                                                           ),
                                                         ),
-                                                        enabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                            color: AppColor
-                                                                .secondary,
+                                                        enabledBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                            color: AppColor.secondary,
                                                             width: 0.0,
                                                           ),
                                                         ),
-                                                        labelText:
-                                                            'Code évènement',
+                                                        labelText: 'Saisir le code évènement',
                                                         labelStyle: TextStyle(
                                                           color: AppColor.text,
-                                                          fontWeight:
-                                                              FontWeight.bold,
+                                                          fontWeight: FontWeight.bold,
                                                           fontSize: 14,
                                                         ),
                                                         filled: true,
-                                                        fillColor:
-                                                            AppColor.secondary,
+                                                        fillColor: AppColor.secondary,
+                                                        floatingLabelBehavior: FloatingLabelBehavior.always,
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 40,
-                                                ),
+                                                const SizedBox(height: 40),
                                                 Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
                                                     Expanded(
                                                       child: OutlinedButton(
                                                         onPressed: () {
-                                                          Navigator.pop(
-                                                              context);
-                                                          _codeController
-                                                              .clear();
+                                                          Navigator.pop(context);
+                                                          _codeController.clear();
                                                           isLoading = false;
                                                         },
-                                                        style: OutlinedButton
-                                                            .styleFrom(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(10),
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        8),
+                                                        style: OutlinedButton.styleFrom(
+                                                          padding: const EdgeInsets.all(10),
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(8),
                                                           ),
-                                                          side: const BorderSide(
-                                                              width: 0.7,
-                                                              color: AppColor
-                                                                  .primary),
+                                                          side: const BorderSide(width: 0.7, color: AppColor.primary),
                                                         ),
                                                         child: Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .center,
-                                                            children: const [
-                                                              Text(
-                                                                "Annuler",
-                                                              ),
-                                                            ]),
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: const [Text("Annuler")],
+                                                        ),
                                                       ),
                                                     ),
-                                                    const SizedBox(
-                                                      width: 10,
-                                                    ),
+                                                    const SizedBox(width: 10),
                                                     Expanded(
                                                       child: StatefulBuilder(
-                                                          builder: (BuildContext
-                                                                  context1,
-                                                              StateSetter
-                                                                  setState) {
-                                                        return RaisedButtonDecor(
-                                                          onPressed: isLoading
-                                                              ? () {}
-                                                              : () async {
-                                                                  if (_keyForm
-                                                                      .currentState!
-                                                                      .validate()) {
-                                                                    setState(
-                                                                      () {
-                                                                        isLoading =
-                                                                            true;
-                                                                      },
-                                                                    );
-                                                                    bool
-                                                                        isCodeCorrect =
-                                                                        await verifyCode(
-                                                                            _codeController.text,eventId);
-                                                                    setState(
-                                                                      () {
-                                                                        isLoading =
-                                                                            false;
-                                                                      },
-                                                                    );
-                                                                    if (isCodeCorrect) {
-                                                                      _codeController
-                                                                          .clear();
-                                                                      Navigator.of(
-                                                                              context)
-                                                                          .pushReplacement(MaterialPageRoute(builder:
-                                                                              (BuildContext context) {
+                                                        builder: (BuildContext context1, StateSetter setState) {
+                                                          return RaisedButtonDecor(
+                                                            onPressed: isLoading ? () {} : () async {
+                                                              if (_keyForm.currentState!.validate()) {
+                                                                setState(() {
+                                                                  isLoading = true;
+                                                                });
+                                                                bool isCodeCorrect = await verifyCode(
+                                                                    _codeController.text, eventId);
+                                                                setState(() {
+                                                                  isLoading = false;
+                                                                });
+                                                                if (isCodeCorrect) {
+                                                                  _codeController.clear();
+                                                                  Navigator.of(context).pushReplacement(
+                                                                    MaterialPageRoute(
+                                                                      builder: (BuildContext context) {
                                                                         return const ScanScreen();
-                                                                      }));
-                                                                    } else {
-                                                                      await showDialog<
-                                                                              void>(
-                                                                          context:
-                                                                              context1,
-                                                                          barrierDismissible:
-                                                                              true, // user must tap button!
-                                                                          builder:
-                                                                              (BuildContext context) {
-                                                                            return AlertDialog(
-                                                                              title: const Icon(
-                                                                                Icons.warning,
-                                                                                color: Colors.red,
-                                                                                size: 50,
+                                                                      },
+                                                                    ),
+                                                                  );
+                                                                } else {
+                                                                  await showDialog<void>(
+                                                                    context: context1,
+                                                                    barrierDismissible:
+                                                                    true, // user must tap button!
+                                                                    builder: (BuildContext context) {
+                                                                      return AlertDialog(
+                                                                        title: const Icon(
+                                                                          Icons.warning,
+                                                                          color: Colors.red,
+                                                                          size: 50,
+                                                                        ),
+                                                                        content: const Text(
+                                                                          'Code non valide',
+                                                                          textAlign: TextAlign.center,
+                                                                          style: TextStyle(
+                                                                            fontSize: 18,
+                                                                            fontWeight: FontWeight.bold,
+                                                                          ),
+                                                                        ),
+                                                                        actions: [
+                                                                          MaterialButton(
+                                                                            shape: RoundedRectangleBorder(
+                                                                              borderRadius:
+                                                                              BorderRadius.circular(10),
+                                                                            ),
+                                                                            color: AppColor.primary,
+                                                                            onPressed: () {
+                                                                              Navigator.pop(context);
+                                                                            },
+                                                                            child: const Text(
+                                                                              'OK',
+                                                                              style: TextStyle(
+                                                                                fontSize: 15,
+                                                                                color: Colors.white,
                                                                               ),
-                                                                              content: const Text(
-                                                                                'Code non valide',
-                                                                                textAlign: TextAlign.center,
-                                                                                style: TextStyle(
-                                                                                  fontSize: 18,
-                                                                                  fontWeight: FontWeight.bold,
-                                                                                ),
-                                                                              ),
-                                                                              actions: [
-                                                                                MaterialButton(
-                                                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                                                                  color: AppColor.primary,
-                                                                                  onPressed: () {
-                                                                                    Navigator.pop(context);
-                                                                                  },
-                                                                                  child: const Text(
-                                                                                    'OK',
-                                                                                    style: TextStyle(fontSize: 15, color: Colors.white),
-                                                                                  ),
-                                                                                ),
-                                                                              ],
-                                                                            );
-                                                                          });
-                                                                    }
-                                                                  }
-                                                                },
-                                                          elevation: 0,
-                                                          color: AppColor
-                                                              .primaryColor,
-                                                          shape: BorderRadius
-                                                              .circular(10),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(10),
-                                                          child: isLoading
-                                                              ? const SizedBox(
-                                                                  height: 20,
-                                                                  width: 20,
-                                                                  child:
-                                                                      CircularProgressIndicator())
-                                                              : const Text(
-                                                                  "Envoyer",
-                                                                  overflow:
-                                                                      TextOverflow
-                                                                          .ellipsis,
-                                                                  style: TextStyle(
-                                                                      color: Colors
-                                                                          .white),
-                                                                ),
-                                                        );
-                                                      }),
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      );
+                                                                    },
+                                                                  );
+                                                                }
+                                                              }
+                                                            },
+                                                            elevation: 0,
+                                                            color: AppColor.primaryColor,
+                                                            shape: BorderRadius.circular(10),
+                                                            padding: const EdgeInsets.all(10),
+                                                            child: isLoading
+                                                                ? const SizedBox(
+                                                                height: 20,
+                                                                width: 20,
+                                                                child: CircularProgressIndicator())
+                                                                : const Text(
+                                                              "Envoyer",
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: TextStyle(color: Colors.white),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                                     ),
                                                   ],
                                                 )
@@ -382,6 +315,7 @@ class MyCards extends StatelessWidget {
                                             ),
                                           ),
                                         ),
+
                                       );
                                     },
                                   );

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -70,6 +71,15 @@ static Future setIsNew(bool isNew) async =>
 print('unable to get the device platform');
     }
     return id;
+  }
+
+  static Future<Map<String, dynamic>> readScanResult() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String storedResponse = prefs.getString('scan_result') ?? '';
+
+    Map<String, dynamic> result = jsonDecode(storedResponse) as Map<String, dynamic>;
+
+    return result;
   }
 
   // static Future clear() async => _preferences.clear();

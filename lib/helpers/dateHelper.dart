@@ -110,4 +110,12 @@ class DateConvertisseur {
   convertirTimeofDay(time) {
     return '${(time.period == DayPeriod.am || time.hour >= 12 ? time.hour : time.hour + 12).toString().padLeft(2, '0')} h : ${time.minute.toString().padLeft(2, '0')} min';
   }
+
+  bool isToday(String dateString) {
+    DateTime date = DateTime.parse(dateString);
+    DateTime now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
+  }
+
 }
+
