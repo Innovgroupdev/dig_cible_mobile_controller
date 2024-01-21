@@ -37,28 +37,34 @@ Future<bool> verifyCode(String code, String eventId) async {
 
 
 
-Future<bool> verifyCodeQr(String ticketCode, String eventDate) async {
-final eventData =  await SharedPreferencesHelper.readScanResult();
-eventDate = eventData['end_date'];
 
-  Map<String, dynamic> data = {"code": 'e6d25a75-fa5b-4be5-8158-c8f4e0ad21ab', "event_date": eventDate};
+
+Future<Map<String, dynamic>> verifyCodeQr(String ticketCode, String eventDate) async {
+  final eventData = await SharedPreferencesHelper.readScanResult();
+  eventDate = eventData['end_date'];
+
+  Map<String, dynamic> data = {"code": ticketCode, "event_date": eventDate};
   try {
     var response = await http.post(
       Uri.parse('$baseApiUrl/tickets/scan'),
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        //"Authorization": "Bearer $ticketAccessToken",
+        // Uncomment the line below if needed
+        // "Authorization": "Bearer $ticketAccessToken",
       },
       body: jsonEncode(data),
     );
 
     print('res' + response.body.toString());
     var finalData = jsonDecode(response.body) as Map<String, dynamic>;
-    return finalData['success'] == true;
+
+    return finalData;
+
   } catch (e) {
     print('Error: $e');
-    return false;
+    // Return an appropriate error message or handle the error as needed
+    throw Exception('Error occurred: $e');
   }
 }
 

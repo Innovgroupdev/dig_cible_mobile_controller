@@ -112,9 +112,9 @@ class _ScanScreenState extends State<ScanScreen> {
       });
       await verifyCodeQr(ticketCode, ' ').then((value) {
         setState(() {
-          isQrValide = value;
+          isQrValide = value['success'];
           result = scanData;
-          _showResultDialog();
+          _showResultDialog(value['message']);
         });
         //controller.resumeCamera();
       });
@@ -144,7 +144,7 @@ class _ScanScreenState extends State<ScanScreen> {
     _cameraPausedCompleter.complete();
   }
 
-  void _showResultDialog() {
+  void _showResultDialog(String value) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -155,7 +155,7 @@ class _ScanScreenState extends State<ScanScreen> {
             size: 50,
           ),
           content: Text(
-            isQrValide ? 'Code valide' : 'Code non valide',
+            value,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 18,

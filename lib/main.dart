@@ -70,7 +70,6 @@ class _MyAppState extends State<MyApp> {
 
     if (jsonData != null) {
      widget.isTd = DateConvertisseur().isToday(jsonData['end_date']);
-     print(2222222);
 
      print(widget.isTd);
 
@@ -89,7 +88,7 @@ class _MyAppState extends State<MyApp> {
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
           primarySwatch: Colors.green,
         ),
-        home: widget.isTd == true ? const ScanScreen() : const WelcomeScreen(),
+        home: widget.isNew != null ? widget.isTd == true ? const ScanScreen() : const EventsScreen() : const WelcomeScreen(),
       ),
     );
   }
